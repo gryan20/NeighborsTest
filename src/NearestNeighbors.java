@@ -1,3 +1,7 @@
+// I need to add a number count in front I know I have to do count ++ but I don't know where to put it.
+//It won't print off half of the words it's suppose to
+
+
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,40 +11,54 @@ import java.io.IOException;
 
 public class NearestNeighbors {
 
-	private List<Iris>irisDataSet;
+	// private List<Iris>irisDataSet; DONT NEED
 	private List<Iris>testDataSet;
 	private List<Iris>trainingDataSet;
 	private List<Iris>condensedDataSet;
 	
 	public NearestNeighbors() {
-		irisDataSet = new ArrayList<Iris>();
+		// irisDataSet = new ArrayList<Iris>();  DON'T NEED
 		testDataSet = new ArrayList<Iris>();
 		trainingDataSet = new ArrayList<Iris>();
 		condensedDataSet = new ArrayList<Iris>();
-		}
+	}
 	
 	public static void main(String[] args) throws IOException {
+		int number = 0;
+		
 		System.out.println("Programming Fundamentals");
 		System.out.println("Name: Gabby Ryan");
 		System.out.println("PROGRAMMING ASSIGNMENT 3");
+		System.out.println(" ");
+		
 		
 		DataReader read = new DataReader();
+		Scanner scanner = new Scanner(System.in);
 		NearestNeighbors cnnImpl = new NearestNeighbors();
-		cnnImpl.SetIrisDataSet(read.getIrisData());
-		cnnImpl.prepareTrainingData();
-		cnnImpl.prepareTestData();
-		cnnImpl.prepareCondensedSet();
-		System.out.println("The condensed set is");
+
+		
+		System.out.println("Enter the path for the training data: ");
+		String 	  irisPath = scanner.nextLine();
+		// storing them separately
+		cnnImpl.SetIrisTrainingSet(read.getIrisData(irisPath));
+		System.out.println("Enter the path for the testing data: ");
+		irisPath = scanner.nextLine();
+		System.out.println("EX#:  TRUE LABEL, PREDICTED LABEL");
+		cnnImpl.SetIrisTestSet(read.getIrisData(irisPath));
+		scanner.close();
+
+		
+		cnnImpl.prepareCondensedSet(); // Do i need the condensed Data set?
 		for (Iris i : cnnImpl.condensedDataSet)
 		{
 			System.out.println(i);
 		}
 		
 		double classifyAcc = cnnImpl.calculateClassificationAcc();
-		System.out.println("Classification accuracy: " + classifyAcc);
-		}
+		System.out.println("ACCURACY: " + classifyAcc);
+	}
 	
-		private double calculateClassificationAcc()
+		private double calculateClassificationAcc()  
 		{
 			double minDist = 999999;
 			double correctClassification = 0;
@@ -58,34 +76,14 @@ public class NearestNeighbors {
 						closestSample = trainD;
 					}
 				}
-			if (testD.type == closestSample.type)
-			{
-				correctClassification++;
+				if (testD.type == closestSample.type)
+				{
+					correctClassification++;
+				}
 			}
-			}
-		System.out.println("Correct classified:" + correctClassification);
-		double classAccuracy  = correctClassification/(testDataSet.size());
-		return classAccuracy;
-		}
-		
-		public void prepareTestData()
-		{
-		if (irisDataSet.size() == 150)
-		{
-			testDataSet.addAll(irisDataSet.subList(30, 50));
-			testDataSet.addAll(irisDataSet.subList(80, 100));
-			testDataSet.addAll(irisDataSet.subList(130, 150));
-		}
-		}
-		
-		public void prepareTrainingData()
-		{
-		if (irisDataSet.size() == 150)
-			{
-			trainingDataSet.addAll(irisDataSet.subList(0, 30));
-			trainingDataSet.addAll(irisDataSet.subList(50, 80));
-			trainingDataSet.addAll(irisDataSet.subList(100, 150));
-			}
+			//System.out.println("Correct classified:" + correctClassification);
+			double classAccuracy  = correctClassification/(testDataSet.size());
+			return classAccuracy; // ** Need to change this formating to more decimal places I'll work on this while you look at the other stuff.
 		}
 		
 		public void prepareCondensedSet()
@@ -98,46 +96,50 @@ public class NearestNeighbors {
 			int previousReducedSetSize = 0;
 			while (true)
 			{
-			previousReducedSetSize = reducedSet.size();
-			int i = 0;
-			while (!reducedSet.isEmpty())
-			{
-				Iris ir = reducedSet.get(0);
-				double minDist = 999999;
-				IrisType type =IrisType.SETOSA;
-				Iris ic = null;
-				
-				for (int j = 0; j < condensedDataSet.size(); j++)
-				{ic = condensedDataSet.get(j);
-				double distBetweenPattern = ir.distance(ic);
-				if (distBetweenPattern < minDist)
+				previousReducedSetSize = reducedSet.size();
+				int i = 0;
+				while (!reducedSet.isEmpty())
 				{
-					minDist = distBetweenPattern;
-					type = ic.type;
+					Iris ir = reducedSet.get(0);
+					double minDist = 999999;
+					IrisType type =IrisType.SETOSA;
+					Iris ic = null;
+				
+					for (int j = 0; j < condensedDataSet.size(); j++)
+					{
+						ic = condensedDataSet.get(j);
+						double distBetweenPattern = ir.distance(ic);
+						if (distBetweenPattern < minDist)
+						{
+							minDist = distBetweenPattern;
+							type = ic.type;
+						}
+					}
+
+					if (ir.type != type)
+					{
+						condensedDataSet.add(ir);
+					}
+
+					reducedSet.remove(ir);
 				}
+
+				reducedSet = constructReducedSet();
+				if (previousReducedSetSize == reducedSet.size())
+				{
+					unchangedCount++;
 				}
-			if (ir.type != type)
-			{
-				condensedDataSet.add(ir);
+				else
+				{
+					unchangedCount = 0;
+				}
+				if (unchangedCount == 2) {
+					break;
+				}
 			}
-			reducedSet.remove(ir);
-			}
-			reducedSet = constructReducedSet();
-			if (previousReducedSetSize == reducedSet.size())
-			{
-			unchangedCount++;
-			}
-			else
-			{
-				unchangedCount = 0;
-			}
-			if (unchangedCount == 2) {
-				break;
-			}
-			}
-			}
-			private List<Iris>constructReducedSet() 
-			{
+		}
+		private List<Iris>constructReducedSet()
+		{
 			List<Iris> reducedSet = new ArrayList<Iris>();
 			for (Iris iTrain : trainingDataSet)
 			{
@@ -147,117 +149,123 @@ public class NearestNeighbors {
 				}
 				reducedSet.add(iTrain);
 			}
+
 			return reducedSet;
+		}
 			
-			}
+		public void SetIrisTrainingSet(List<Iris>irisDataSet)
+		{
+				this.trainingDataSet = irisDataSet;
+		}
 			
-			public void SetIrisDataSet(List<Iris>irisDataSet)
+		public void SetIrisTestSet(List<Iris>irisDataSet)
+		{
+				this.testDataSet = irisDataSet;
+		}
+}
+class DataReader{
+	public List<Iris> getIrisData(String irisFilePath) throws IOException
+	{
+		Scanner irisDataReader = new Scanner(new FileReader(irisFilePath));
+		List<Iris> irisDataSet= new ArrayList<Iris>();
+
+		while(irisDataReader.hasNextLine())
+		{
+			String input = irisDataReader.nextLine();
+			String[] attr = null;
+					
+			if (input != null)
 			{
-				this.irisDataSet = irisDataSet;
+				attr = ((String) input).split(",");
 			}
+					
+			if (attr != null && attr.length == 5)
+			{
+				IrisType type = IrisType.getType(attr[4]); // will I have to change this since I only need 2 (or 3 with the # printed?)
+				Iris sample = new Iris(Double.parseDouble(attr[0]),
+						Double.parseDouble(attr[1]),
+						Double.parseDouble(attr[2]),
+						Double.parseDouble(attr[3]),
+						Double.parseDouble(attr[4]),
+						type);
+				irisDataSet.add(sample);
 			}
-			class DataReader{
-				public List<Iris> getIrisData() throws IOException
-				{
-					Scanner irisDataReader = new Scanner(new FileReader("C:\\Users\\Gabby\\Documents\\Programming Fundamentals"));
-					List<Iris> irisDataSet= new ArrayList<Iris>();
-					while(irisDataReader.hasNextLine())
-					{
-					String input = irisDataReader.nextLine();
-					String[] attr = null;
-					
-					if (input != null)
-					{
-						attr = ((String) input).split(",");
-					}
-					
-					if (attr != null && attr.length == 5)
-					{
-						IrisType type = IrisType.getType(attr[4]);
-						Iris sample = new Iris(Double.parseDouble(attr[0]), 
-								Double.parseDouble(attr[1]),
-								Double.parseDouble(attr[2]),
-								Double.parseDouble(attr[3]),
-								type);
-						irisDataSet.add(sample);
-								
-					}
-				}
+		}
 			return irisDataSet;
-			}
+	}
+}
+
+class Iris
+{
+	double sepalLength;
+	double sepalWidth;
+	double petalLength;
+	double petalWidth;
+	double number;
+	IrisType type;
+
+	Iris(double sl, double sw, double pl, double pw, double number, IrisType t)
+	{
+		sepalLength = sl;
+		sepalWidth = sw;
+		petalLength = pl;
+		petalWidth = pw;
+		type = t;
+		
+	}
+			
+	public String toString()
+	{
+		return type.getLabel() + " " + type.getLabel(); //how do I enter a count before this?
+	}
+			
+	public boolean equals(Iris other)
+	{
+		return ((this.sepalLength == other.sepalLength) &&
+				(this.petalLength == other.petalLength) &&
+				(this.sepalWidth == other.petalWidth) &&
+				(this.type == other.type));
+	}
+			
+	public double distance(Iris other)
+	{
+		double d1 = Math.pow((this.sepalLength - other.sepalLength), 2);
+		double d2 = Math.pow((this.sepalWidth - other.sepalWidth), 2);
+		double d3 = Math.pow((this.petalWidth - other.petalWidth), 2);
+		double d4 = Math.pow((this.petalLength - other.petalLength),2);
+		return Math.sqrt(d1 + d2 + d3 + d4);
+	}
+			
+}
+enum IrisType
+{
+	SETOSA(1, "Iris-Setosa"), VERSICOLOR(2,"Iris-Versicolor"), VIRGINICA(3,"Iris-Virginica");
+	private int code;
+	private String label;
+
+	IrisType(int code, String label)
+	{
+		this.code = code;
+		this.label = label;
+	}
+	public int getCode()
+	{
+		return this.code;
+	}
+	public String getLabel()
+	{
+		return this.label;
+	}
+	public static IrisType getType(String type)
+	{
+		if ("Iris-versicolor".equals(type))
+		{
+			return VERSICOLOR;
 		}
-		class Iris
+		if ("Iris-virginica".equals(type))
 		{
-			double sepalLength;
-			double sepalWidth;
-			double petalLength;
-			double petalWidth;
-			
-			IrisType type;
-			
-			Iris(double sl, double sw, double pl, double pw, IrisType t)
-			{
-				sepalLength = sl;
-				sepalWidth = sw;
-				petalLength = pl;
-				petalWidth = pw;
-				type = t;
-			
-			}
-			
-			public String toString()
-			{
-				return "SL:" + sepalLength + "SW:" + sepalWidth + "PL:" + petalLength + "PW:" + petalWidth + "Petal:" + type.getLabel();
-			}
-			
-			public boolean equals(Iris other)
-			{
-			return ((this.sepalLength == other.sepalLength) &&
-					(this.petalLength == other.petalLength) &&
-					(this.sepalWidth == other.petalWidth) &&
-					(this.type == other.type));
-			}
-			
-			public double distance(Iris other)
-			{
-				double d1 = Math.pow((this.sepalLength - other.sepalLength), 2);
-				double d2 = Math.pow((this.sepalWidth - other.sepalWidth), 2);
-				double d3 = Math.pow((this.petalWidth - other.petalWidth), 2);
-				double d4 = Math.pow((this.petalLength - other.petalLength),2);
-				return Math.sqrt(d1 + d2 + d3 + d4);
-				
-			}
-			
-			}
-		enum IrisType
-		{
-			SETOSA(1, "Setosa"), VERSICOLOR(2,"Versicolor"), VIRGINICA(3,"Virginica");
-			private int code;
-			private String label;
-			
-			IrisType(int code, String label)
-			{
-				this.code = code;
-				this.label = label;
-			}
-			public int getCode()
-			{
-				return this.code;
-			}
-			public String getLabel()
-			{
-				return this.label;
-			}
-		public static IrisType getType(String type)
-		{
-			if ("Iris-versicolor".equals(type))
-			{
-				return VERSICOLOR;
-			}
-			if ("Iris-virginica".equals(type))
-			{
-				return VIRGINICA;
-			}
-			return SETOSA;
-			}
+			return VIRGINICA;
 		}
+		return SETOSA;
+	}
+}
